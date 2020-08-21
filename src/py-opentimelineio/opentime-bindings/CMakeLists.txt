@@ -29,6 +29,6 @@ elseif(UNIX)
 endif()
 
 if (OTIO_PYTHON_INSTALL_DIR)
-    install(TARGETS _opentime DESTINATION "${OTIO_PYTHON_INSTALL_DIR}/opentimelineio")
+    install(TARGETS _opentime DESTINATION "${OTIO_PYTHON_INSTALL_DIR}")
 endif()
 
