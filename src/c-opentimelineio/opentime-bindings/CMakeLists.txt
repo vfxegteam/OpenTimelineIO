@@ -26,6 +26,7 @@ set_target_properties(copentime PROPERTIES
 if(OTIO_C_INSTALL)
     install(FILES ${OPENTIME_HEADER_FILES} DESTINATION ${CMAKE_INSTALL_PREFIX}/include/copentime)
     install(TARGETS copentime
+            ARCHIVE DESTINATION ${CMAKE_INSTALL_PREFIX}/lib
             RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}/bin
             LIBRARY DESTINATION ${CMAKE_INSTALL_PREFIX}/lib)
 endif()

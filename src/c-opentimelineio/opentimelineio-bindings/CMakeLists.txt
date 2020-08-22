@@ -107,6 +107,7 @@ set_target_properties(copentimelineio PROPERTIES INSTALL_RPATH "${CMAKE_INSTALL_
 
 if(OTIO_C_INSTALL)
     install(TARGETS copentimelineio
+            ARCHIVE DESTINATION lib}
             RUNTIME DESTINATION bin
             LIBRARY DESTINATION lib)
     install(FILES ${OPENTIMELINEIO_HEADER_FILES} 
