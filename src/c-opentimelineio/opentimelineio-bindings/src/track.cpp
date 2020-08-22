@@ -6,7 +6,7 @@
 #include <opentimelineio/composable.h>
 #include <opentimelineio/errorStatus.h>
 #include <opentimelineio/track.h>
-#include <optional>
+#include <opentimelineio/optional.h>
 #include <string.h>
 #include <utility>
 
