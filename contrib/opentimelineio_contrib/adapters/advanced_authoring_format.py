@@ -52,10 +52,10 @@ import aaf2.core  # noqa: E402
 from opentimelineio_contrib.adapters.aaf_adapter import aaf_writer  # noqa: E402
 
 
-debug = False
+debug = True
 
 # If enabled, output recursive traversal info of _transcribe() method.
-_TRANSCRIBE_DEBUG = False
+_TRANSCRIBE_DEBUG = True
 
 
 def _transcribe_log(s, indent=0, always_print=False):
@@ -130,34 +130,39 @@ def _transcribe_property(prop):
 
 def _find_timecode_mobs(item):
     mobs = [item.mob]
+    errs = []
 
-    for c in item.walk():
-        if isinstance(c, aaf2.components.SourceClip):
-            mob = c.mob
-            if mob:
-                mobs.append(mob)
-            else:
-                continue
-        else:
-            # This could be 'EssenceGroup', 'Pulldown' or other segment
-            # subclasses
-            # For example:
-            # An EssenceGroup is a Segment that has one or more
-            # alternate choices, each of which represent different variations
-            # of one actual piece of content.
-            # According to the AAF Object Specification and Edit Protocol
-            # documents:
-            # "Typically the different representations vary in essence format,
-            # compression, or frame size. The application is responsible for
-            # choosing the appropriate implementation of the essence."
-            # It also says they should all have the same length, but
-            # there might be nested Sequences inside which we're not attempting
-            # to handle here (yet). We'll need a concrete example to ensure
-            # we're doing the right thing.
-            # TODO: Is the Timecode for an EssenceGroup correct?
-            # TODO: Try CountChoices() and ChoiceAt(i)
-            # For now, lets just skip it.
-            continue
+    try:
+        for  c in item.walk():
+                if isinstance(c, aaf2.components.SourceClip):
+                    mob = c.mob
+                    if mob:
+                        mobs.append(mob)
+                    else:
+                        continue
+                else:
+                    # This could be 'EssenceGroup', 'Pulldown' or other segment
+                    # subclasses
+                    # For example:
+                    # An EssenceGroup is a Segment that has one or more
+                    # alternate choices, each of which represent different variations
+                    # of one actual piece of content.
+                    # According to the AAF Object Specification and Edit Protocol
+                    # documents:
+                    # "Typically the different representations vary in essence format,
+                    # compression, or frame size. The application is responsible for
+                    # choosing the appropriate implementation of the essence."
+                    # It also says they should all have the same length, but
+                    # there might be nested Sequences inside which we're not attempting
+                    # to handle here (yet). We'll need a concrete example to ensure
+                    # we're doing the right thing.
+                    # TODO: Is the Timecode for an EssenceGroup correct?
+                    # TODO: Try CountChoices() and ChoiceAt(i)
+                    # For now, lets just skip it.
+                    continue
+    except Exception as e:
+        errs.append(num)
+        pass
 
     return mobs
 
@@ -206,6 +211,7 @@ def _add_child(parent, child, source):
 def _transcribe(item, parents, edit_rate, indent=0):
     result = None
     metadata = {}
+    jumped_childs = []
 
     # First lets grab some standard properties that are present on
     # many types of AAF objects...
@@ -238,7 +244,8 @@ def _transcribe(item, parents, edit_rate, indent=0):
         _transcribe_log(msg, indent)
         result = otio.schema.SerializableCollection()
 
-        for mob in item.compositionmobs():
+        
+        for pos, mob in enumerate(item.compositionmobs()):
             _transcribe_log("compositionmob traversal", indent)
             child = _transcribe(mob, parents + [item], edit_rate, indent + 2)
             _add_child(result, child, mob)
@@ -498,10 +505,15 @@ def _transcribe(item, parents, edit_rate, indent=0):
         result = _transcribe(item.getvalue("Selected"),
                              parents + [item], edit_rate, indent + 2)
 
-        alternates = [
-            _transcribe(alt, parents + [item], edit_rate, indent + 2)
-            for alt in item.getvalue("Alternates")
-        ]
+        alternates = []
+        try:
+            alternates = [
+                _transcribe(alt, parents + [item], edit_rate, indent + 2)
+                for alt in item.getvalue("Alternates")
+            ]
+        except Exception as e:
+            print(e)
+            pass
 
         # muted case -- if there is only one item its muted, otherwise its
         # a multi cam thing
